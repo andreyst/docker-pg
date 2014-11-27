@@ -64,6 +64,50 @@ require $framework.'/Illuminate/Foundation/start.php';
 
 /*
 |--------------------------------------------------------------------------
+| Define Trace singleton
+|--------------------------------------------------------------------------
+|
+| Here we define Trace singleton, which we use in logger handler to
+| append traceId and spanId to every log item.
+|
+*/
+
+$app->singleton('Trace', function() {
+  // <REFACTORME>
+  // Move this class definition somewhere appropriate
+  class Trace {
+    public $traceId = "-";
+    public $spanId = "-";
+    public function generateNewTrace($return = false) {
+      // <REFACTORME>
+      // Choose more efficient random string generation method
+      $traceId = md5(mt_rand());
+      $spanId = substr(md5(mt_rand()), 0, 8);
+      // </REFACTORME>
+      if ($return) {
+        $trace = [
+          'traceId' => $traceId,
+          'spanId' => $spanId
+        ];
+        return $trace;
+      }
+      $this->traceId = md5(mt_rand());
+      $this->spanId = substr(md5(mt_rand()), 0, 8);
+    }
+
+    public function populateTrace($traceId, $spanId) {
+      $this->traceId = $traceId;
+      $this->spanId = $spanId . '.' . substr(md5(mt_rand()), 0, 8);
+    }
+  }
+  // </REFACTORME>
+
+  $trace = new Trace;
+  return $trace;
+});
+
+/*
+|--------------------------------------------------------------------------
 | Return The Application
 |--------------------------------------------------------------------------
 |
