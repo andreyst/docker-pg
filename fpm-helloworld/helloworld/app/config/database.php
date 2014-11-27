@@ -1,6 +1,29 @@
 <?php
 
+// <REFACTOR ME>
 $databases = array();
+foreach($_SERVER as $envVarName => $envVar) {
+	$matched = preg_match('~DB(\d+)_NAME~', $envVarName	, $matches);
+	if ($matched) {
+		$dbNum = $matches[1];
+		$urlParts = parse_url($_SERVER['DB' . $dbNum . '_PORT']);
+		$database = $_SERVER['DB' . $dbNum . '_ENV_MYSQL_DATABASE'];
+		$username = $_SERVER['DB' . $dbNum . '_ENV_MYSQL_USER'];
+		$password = $_SERVER['DB' . $dbNum . '_ENV_MYSQL_PASSWORD'];
+		$databases['db' . $dbNum] = [
+			'driver'    => 'mysql',
+			'host'      => $urlParts['host'],
+			'port'			=> $urlParts['port'],
+			'database'  => $database,
+			'username'  => $username,
+			'password'  => $password,
+			'charset'   => 'utf8',
+			'collation' => 'utf8_unicode_ci',
+			'prefix'    => '',
+		];
+	}
+}
+// </REFACTOR ME>
 
 $redis = array(
 	'cluster'  => false,
