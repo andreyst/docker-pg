@@ -25,6 +25,7 @@ foreach($_SERVER as $envVarName => $envVar) {
 }
 // </REFACTOR ME>
 
+// <REFACTOR ME>
 $redis = array(
 	'cluster'  => false,
 	'default'  => [
@@ -33,6 +34,29 @@ $redis = array(
 		'database' => 0,
 	],
 );
+if (isset($_SERVER['REDIS_PORT'])) {
+	$urlParts = parse_url($_SERVER['REDIS_PORT']);
+	$redis = [
+		'cluster'  => false,
+		'default'  => [
+			'host'     => $urlParts['host'],
+			'port'     => $urlParts['port'],
+			'database' => 0,
+		],
+		'redis1_0'   => [
+			'host'     => $urlParts['host'],
+			'port'     => $urlParts['port'],
+			'database' => 0,
+		],
+		'redis1_1'   => [
+			'host'     => $urlParts['host'],
+			'port'     => $urlParts['port'],
+			'database' => 1,
+		],
+	];
+}
+// </REFACTOR ME>
+
 return array(
 
 	/*
