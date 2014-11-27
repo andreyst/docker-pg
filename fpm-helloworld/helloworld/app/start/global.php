@@ -49,13 +49,6 @@ Log::useFiles('/var/log/helloworld/laravel.log');
 App::error(function(Exception $exception, $code)
 {
 	Log::error($exception);
-
-  $validIpAddresses = ['123.456.789.0', '321.654.987.0'];
-
-  if (in_array(Request::getClientIp(), $validIpAddresses))
-  {
-      throw $exception;
-  }
 });
 
 /*
