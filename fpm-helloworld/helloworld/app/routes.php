@@ -28,3 +28,10 @@ Route::get('users', function()
 
     return View::make('users')->with('users', $users);
 });
+
+Route::get('samplelog', function()
+{
+    $sampleLog = SampleLog::all();
+
+    return View::make('sampleLog')->with('sampleLog', $sampleLog);
+});
