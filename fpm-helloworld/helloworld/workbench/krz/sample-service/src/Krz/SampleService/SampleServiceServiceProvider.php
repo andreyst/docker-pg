@@ -19,6 +19,13 @@ class SampleServiceServiceProvider extends ServiceProvider {
 	public function boot()
 	{
 		$this->package('krz/sample-service');
+
+		$this->app->bind('krz::sampleservice.createjobs', function($app) {
+		    return new CreateJobsCommand();
+		});
+		$this->commands(array(
+		    'krz::sampleservice.createjobs'
+		));
 	}
 
 	/**
