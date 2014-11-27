@@ -33,6 +33,32 @@ ClassLoader::addDirectories(array(
 
 Log::useFiles('/var/log/helloworld/laravel.log');
 
+// <REFACTORME>
+// The better place for this is instead of defining original Laravel log
+// handler, not redefining it after like this
+$monolog = Log::getMonolog();
+// the default date format is "Y-m-d H:i:s"
+$dateFormat = "Y-m-d\TH:i:s.uO";
+// the default output format is "[%datetime%] %channel%.%level_name%: %message% %context% %extra%\n"
+$output = "%datetime% [%level_name%] %message% -- %context%\n";
+// finally, create a formatter
+$handlers = $monolog->getHandlers();
+$formatter = new Monolog\Formatter\LineFormatter($output, $dateFormat);
+foreach($handlers as $handler) {
+  $handler->setFormatter($formatter);
+  $monolog->pushProcessor(function ($record) {
+      // $record['extra']['test'] = Auth::user() ? Auth::user()->username : 'anonymous';
+    // if (count($record['context']) === 0) {
+    //   $record['context'] = "{}";
+    // }
+    $record['context']['traceId'] = App::make('Trace')->traceId;
+    $record['context']['spanId'] = App::make('Trace')->spanId;
+    return $record;
+  });
+}
+// $monolog->setFormatter($formatter);
+// </REFACTORME>
+
 /*
 |--------------------------------------------------------------------------
 | Application Error Handler
