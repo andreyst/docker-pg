@@ -21,3 +21,10 @@ Route::get('/hello', function()
   throw new Exception();
   return 'Hello everybody!';
 });
+
+Route::get('users', function()
+{
+    $users = User::all();
+
+    return View::make('users')->with('users', $users);
+});
