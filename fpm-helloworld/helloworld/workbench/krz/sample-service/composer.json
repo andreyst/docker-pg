@@ -1,0 +1,25 @@
+{
+    "name": "krz/sample-service",
+    "description": "",
+    "authors": [
+        {
+            "name": "krz",
+            "email": "andrey.stolbovsky@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.4.0",
+        "illuminate/support": "4.2.*"
+    },
+    "autoload": {
+        "classmap": [
+            "src/commands",
+            "src/controllers",
+            "src/migrations"
+        ],
+        "psr-0": {
+            "Krz\\SampleService\\": "src/"
+        }
+    },
+    "minimum-stability": "stable"
+}
