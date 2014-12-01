@@ -1,0 +1,265 @@
+db1:
+  build: docker/percona
+  volumes_from:
+    - db1data
+    - db1logs
+  environment:
+    MYSQL_DATABASE: 'dockerPlayground'
+    MYSQL_ROOT_PASSWORD: 'DeXIMuJ7jOVtRnw9A'
+    MYSQL_USER: 'mysqlUser'
+    MYSQL_PASSWORD: 'GIldA3bFok1CXzZPLaDy'
+
+db1data:
+  image: busybox
+  volumes:
+    - /data/mysql
+  command: true
+
+db1logs:
+  image: busybox
+  volumes:
+    - /var/log
+  command: true
+
+db2:
+  build: docker/percona
+  volumes_from:
+    - db2data
+    - db2logs
+  environment:
+    MYSQL_ROOT_PASSWORD: 'VdIhrtmUADJKx0W4u'
+    MYSQL_DATABASE: 'dockerPlayground'
+    MYSQL_USER: 'mysqlUser'
+    MYSQL_PASSWORD: 'AT1fIJLRipY3EtQNycWb'
+
+db2data:
+  image: busybox
+  volumes:
+    - /data/mysql
+  command: true
+
+db2logs:
+  image: busybox
+  volumes:
+    - /var/log
+  command: true
+
+elasticsearch:
+  build: docker/elasticsearch
+  volumes_from:
+    - elasticsearchdata
+    - elasticsearchlogs
+  ports:
+    - "9200:9200"
+  environment:
+    ES_USE_IPV4: true
+
+elasticsearchdata:
+  image: busybox
+  volumes:
+    - /data
+  command: true
+
+elasticsearchlogs:
+  image: busybox
+  volumes:
+    - /var/log
+  command: true
+
+graphitecarbon:
+  build: docker/graphite-carbon
+  volumes_from:
+    - graphitecarbondata
+    - graphitecarbonlogs
+
+graphitecarbondata:
+  image: busybox
+  volumes:
+    - /data/graphite-carbon
+  command: true
+
+graphitecarbonlogs:
+  image: busybox
+  volumes:
+    - /var/log
+  command: true
+
+graphiteweb:
+  build: docker/graphite-web
+  volumes_from:
+    - graphitewebdata
+    - graphiteweblogs
+    - graphitecarbondata # sic!
+
+graphitewebdata:
+  image: busybox
+  volumes:
+    - /data/graphite-web
+  command: true
+
+graphiteweblogs:
+  image: busybox
+  volumes:
+    - /var/log
+  command: true
+
+helloworld:
+  build: helloworld/
+  volumes:
+    - "/Users/pg/docker-pg/helloworld:/var/www/helloworld"
+  volumes_from:
+    - helloworldlogs
+  links:
+    - db1
+    - db2
+    - redis
+    - statsd
+
+helloworldlogs:
+  image: busybox
+  volumes:
+    - /var/log
+  command: true
+
+kibana:
+  build: docker/kibana
+  volumes_from:
+    - kibanalogs
+  ports:
+     - "5601:5601"
+  links:
+    - elasticsearch
+  environment:
+    JAVA_OPTS: "-Djava.net.preferIPv4Stack=true"
+
+kibanalogs:
+  image: busybox
+  volumes:
+    - /var/log
+  command: true
+
+logstash:
+  build: docker/logstash
+  volumes_from:
+    - logstashlogs
+  links:
+    - elasticsearch
+
+logstashlogs:
+  image: busybox
+  volumes:
+    - /var/log
+  command: true
+
+logstashforwarder:
+  build: docker/logstash-forwarder
+  volumes:
+    - /mnt/sda1/var/lib/docker/vfs/dir/5751cc41dbf9a8c6d46dae5b72fca7990eef305d6db68feed124ed3bb374e594:/logs/db1logs
+    - /mnt/sda1/var/lib/docker/vfs/dir/b5c84644fc2dd0ebcff71706b91f3d60beab78a5241f15193d558a19129f983a:/logs/db2logs
+    - /mnt/sda1/var/lib/docker/vfs/dir/40d1720dd1b2155b4a8660653cb115e6cb8e592cb3581faaedb5465a94876696:/logs/helloworldlogs
+    - /mnt/sda1/var/lib/docker/vfs/dir/a7921dc8321679101a97918cc5617684ca262593d6f1ee0aca22d91a70182533:/logs/nginxlogs
+    - /mnt/sda1/var/lib/docker/vfs/dir/50a47dd0b137f4463a1e9effac6b8cdfd9f50d579b2aa57105c475327eb4fa8d:/logs/redislogs
+    - /mnt/sda1/var/lib/docker/vfs/dir/d6d18f90ad3839bf7d0db6b53bd5afba84789e26177622d941949f7c4984c49a:/logs/elasticsearchlogs
+    - /mnt/sda1/var/lib/docker/vfs/dir/d19f2ecde5fc6f4f8ee9f18b3addb73a73ef886e126daa5abe974ed08edd9ec1:/logs/logstashlogs
+  volumes_from:
+    - logstashforwarderdata
+    - logstashforwarderlogs
+  links:
+    - logstash
+
+logstashforwarderlogs:
+  image: busybox
+  volumes:
+    - /var/log
+  command: true
+
+logstashforwarderdata:
+  image: busybox
+  volumes:
+    - /data/logstash-forwarder
+  command: true
+
+nginx:
+  build: docker/nginx
+  volumes_from:
+    - nginxlogs
+  ports:
+     - "80:80"
+  links:
+     - helloworld
+     - graphiteweb
+
+nginxlogs:
+  image: busybox
+  volumes:
+    - /var/log
+  command: true
+
+redis:
+  build: docker/redis
+  volumes_from:
+    - redisdata
+    - redislogs
+
+redisdata:
+  image: busybox
+  volumes:
+    - /data
+  command: true
+
+redislogs:
+  image: busybox
+  volumes:
+    - /var/log
+  command: true
+
+sampleservicedownloadgroup:
+  build: helloworld/
+  command: "bash -c 'while true; do ./artisan queue:work --queue=SampleService.DownloadGroupController --sleep=1; sleep 1; done;'"
+  volumes:
+    - "/Users/pg/docker-pg/helloworld:/var/www/helloworld"
+  volumes_from:
+    - sampleservicedownloadgrouplogs
+  links:
+    - db1
+    - db2
+    - redis
+    - statsd
+
+sampleservicedownloadgrouplogs:
+  image: busybox
+  volumes:
+    - /var/log
+  command: true
+
+sampleserviceprocessdownloadedgroup:
+  build: helloworld/
+  command: "bash -c 'while true; do ./artisan queue:work --queue=SampleService.ProcessDownloadedGroupController --sleep=1; sleep 0.05; done;'"
+  volumes:
+    - "/Users/pg/docker-pg/helloworld:/var/www/helloworld"
+  volumes_from:
+    - sampleserviceprocessdownloadedgrouplogs
+  links:
+    - db1
+    - db2
+    - redis
+    - statsd
+
+sampleserviceprocessdownloadedgrouplogs:
+  image: busybox
+  volumes:
+    - /var/log
+  command: true
+
+statsd:
+  build: docker/statsd
+  volumes_from:
+    - statsdlogs
+  links:
+    - graphitecarbon
+
+statsdlogs:
+  build: docker/statsd
+  volumes:
+    - /var/log
+  command: true

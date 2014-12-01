@@ -1,3 +1,0 @@
-# GOSU
-# CURL
-# NANO
